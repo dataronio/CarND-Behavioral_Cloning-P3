@@ -71,7 +71,7 @@ for image, measurement in zip(images, measurements):
 X_train = np.array(augmented_images)
 y_train = np.array(augmented_measurements)
 
-print(X_train.shape)
+#print(X_train.shape)
 
 #X_train = X_train.reshape(X_train.shape[0], ROWS, COLS, 3)
 
@@ -88,6 +88,7 @@ model.add(Flatten())
 #model.add(Dense(1, W_regularizer=l2(0.03)))
 model.add(Dense(1, init='uniform'))
 
+print(model.summary())
 
 model.compile(loss='mse', optimizer='adam')
 checkpointer = ModelCheckpoint(filepath="model.h5", verbose=1, save_best_only=True)
