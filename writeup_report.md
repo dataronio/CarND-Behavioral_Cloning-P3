@@ -55,11 +55,10 @@ Next run the simulator and choose Autonomous Mode.
 
 #### Solution Design Approach ####
 
-My overall strategy was to utilize Convolutional Neural Network layers to process the input image.  This a natural step as CNN's have been state of the art at image classification since AlexNet in 2012.  Our
+My overall strategy was to utilize Convolutional Neural Network layers to process the input image.  This is a natural step as CNN's have been state of the art at image classification since AlexNet in 2012.  Our
 problem is one of regression (predicting the best continuous steering angle) rather than classification.
-After flattening the resulting feature maps, the flattened vector is fed into a dense layer to a single
-identity output neuron and trained with Mean Squared Error.  This will create a regression network rather
-than classification (discrete number of classes) which would typically use softmax as an output layer.
+After flattening the resulting feature maps the flattened vector is fed into a dense layer to a single
+identity output neuron and trained with the Adam optimizer using the Mean Squared Error criterion.  This will create a regression network rather than a classification (discrete number of classes) network which would typically use softmax as an output layer.
 
 In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. 20% of the training data was used for validation.  To make it easier to train and capture
 the best validation error model, I used a callback to automatically save the model.h5 (weights) file when
@@ -80,16 +79,14 @@ perfectly acceptable autonomous driving network.
 
 #### Creation of the Training Set & Training Process ####
 
-I found it difficult to use either the mouse or keyboard to generate appropriate center lane driving.  I relied
-entirely on the given training data that I have preprocessed and augmented.
+I found it too difficult to use either the mouse or keyboard to generate appropriate center lane driving.  I relied entirely on the given training data that I have preprocessed and augmented.
 
-My major preprocessing is to convert the images from a standard RGB color space to an HSV color space.  HSV stands for Hue, Saturation, and Value and is commonly represented as a solid cylinder rather than a cube such as
-RGB. The HSV color space is based on a perceptual representation of color.
+My major preprocessing step was to convert the images from a standard RGB color space to an HSV color space.  HSV stands for Hue, Saturation, and Value and is commonly represented as a solid cylinder rather than a cube like RGB. The HSV color space is based on a perceptual representation of color.
 The hue is basically color in general (the primary spectrum pure colors red, yellow, green, cyan, blue or magenta). It is common to represent the hue in a circle and give the value of the hue in degrees (360 degrees).
 Saturation refers to the intensity of the color between gray (low saturation) and pure color (high saturation). 
 The value corresponds to the brightness of a color, between black (low value) and average saturation (maximum value).  
 
-I had read a medium post by @xslittlegrass entitled "Self-driving car in a simulator with a tiny neural network" that seemed to show advantage in distinguishing the dirt and the road using the Saturation layer of the HSV color space for the images.  I decided to take a similar but different approach by not making a hard choice of excluding the Hue and value layers.  The details of this are below in the Model Architecture section.
+I had read a medium post by @xslittlegrass entitled "Self-driving car in a simulator with a tiny neural network" that seemed to show an advantage in distinguishing the dirt and the road using the Saturation layer of the HSV color space for the images.  I decided to take a similar but different approach by not making a hard choice of excluding the Hue and value layers.  The details of this are below in the Model Architecture section.
 
 ![alt text][image6]
 
@@ -129,9 +126,9 @@ For example, here is a normal image that has then been flipped:
 After the collection process, I had ~8000 data points. After preprocessing and augmentation I had roughly 48000 images steering data pairs.  Allowing for 20% of the data in the validation set still gives me roughly 38,000 training data points.  This appears to me to be a decently large dataset.  In the future, I will add a small
 amount of noise to the steering correction factor to see if it helps smooth (regularize) the steering controls.
 
-The data was then shuffled and split into train and validation datasets.
+The data was then shuffled and split into training and validation datasets.
 
-I used this training data for training the model and employed early-stopping on the validation set using a model checkpointer feature of Keras.  This made training easier as I could just set training for 10 epochs and the best model in validation loss would be automatically saved.  I used a batch size of 128 as that has worked well for me in the past.  I used the adam optimizer so that manually tuning the learning rate wasn't necessary.
+I used the training data for optimizing the model and employed early-stopping on the validation set results using a model checkpointer feature of Keras.  This made training easier as I could just set training for 10 epochs and the best model in validation loss would be automatically saved.  I used a batch size of 128 as that has worked well for me in the past.  I used the adam optimizer so that manually tuning the learning rate wasn't necessary.
 
 #### Attempts to reduce overfitting in the model ####
 
@@ -141,7 +138,7 @@ A separate validation dataset is used to prevent overfit.  There is no separate 
 
 #### Model Architecture ####
 
-The data is normalized using a Keras lambda layer.  In order for the network to find the best color space representation of the input image, I use a single 1x1 convolution filter to compress the HSV input image to a single feature map layer.  This is followed by 6 3x3 2D convolution filters and finally a single 1x1 convolution layer to compress the 6 layers into a single layer.  The network then flattens the feature map and is fed to a dense layer with a single identity neuron as final output.  All convolution layers use relu activation functions.
+The data is normalized using a Keras lambda layer.  In order for the network to find the best color space representation of the input image, I use a single 1x1 convolution filter to compress the HSV input image to a single feature map layer.  This is followed by 6 3x3 2D convolution filters and finally a single 1x1 convolution layer to compress the 6 layers into a single layer.  The network then flattens the feature map and is fed to a dense layer with a single identity neuron as final output.  All convolution layers use Relu activation functions.
 
 I believe that using an initial 1x1 convolution layer is better than excluding certain input channels.  The network can learn to create an adaptive color representation for the input images.
 
