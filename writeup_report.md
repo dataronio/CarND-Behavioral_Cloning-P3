@@ -105,7 +105,7 @@ Examples are given below for a standard RGB image:
 
 ![alt text][image2]
 
-In the following we see (top to bottom images) the Hue, Saturation, and Value channel separately for this image.
+In the following we see (left to right, bottom images) the Hue, Saturation, and Value channel separately for this image.
 
 ![alt text][image3]
 ![alt text][image4]
@@ -146,9 +146,8 @@ I believe that using an initial 1x1 convolution layer is better than excluding c
 
 ####  Final Model Summary ####
 
-Here is the output of Keras's model.summary() as a structured architecture summary. You can see that most parameters are in the final output layer.  By shrinking the dataset images further, I believe I can reduce the number of parameters dramatically. 
+Here is the output of Keras's model.summary() as a structured architecture summary. You can see that most parameters are in the final output layer.
 
 ![alt text][image1]
 
-
-
+By shrinking the dataset images further, I believe I can reduce the number of parameters dramatically. 
