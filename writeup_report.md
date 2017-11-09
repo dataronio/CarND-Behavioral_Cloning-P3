@@ -52,7 +52,7 @@ Next run the simulator and choose Autonomous Mode.
 
 ### Model Architecture and Training Strategy ###
 
-####1. Solution Design Approach
+#### Solution Design Approach ####
 
 My overall strategy was to utilize Convolutional Neural Network layers to process the input image.  This a natural step as CNN's have been state of the art at image classification since AlexNet in 2012.  Our
 problem is one of regression (predicting the best continuous steering angle) rather than classification.
@@ -77,7 +77,7 @@ that I could easily shrink the model much farther (primarily by shrinking the im
 perfectly acceptable autonomous driving network. 
 
 
-#### Creation of the Training Set & Training Process
+#### Creation of the Training Set & Training Process ####
 
 I found it difficult to use either the mouse or keyboard to generate appropriate center lane driving.  I relied
 entirely on the given training data that I have preprocessed and augmented.
@@ -86,7 +86,9 @@ My major preprocessing is to convert the images from a standard RGB color space 
 RGB. The HSV color space is based on a perceptual representation of color.
 The hue is basically color in general (the primary spectrum pure colors red, yellow, green, cyan, blue or magenta). It is common to represent the hue in a circle and give the value of the hue in degrees (360 degrees).
 Saturation refers to the intensity of the color between gray (low saturation) and pure color (high saturation). 
-The value corresponds to the brightness of a color, between black (low value) and average saturation (maximum value).
+The value corresponds to the brightness of a color, between black (low value) and average saturation (maximum value).  
+
+I had read a medium post by @xslittlegrass entitled "Self-driving car in a simulator with a tiny neural network" that seemed to show advantage in distinguishing the dirt and the road using the Saturation layer of the HSV color space for the images.  I decided to take a similar but different approach by not making a hard choice of excluding the Hue and value layers.  The details of this are below in the Model Architecture section.
 
 ![alt text][image6]
 
@@ -109,47 +111,44 @@ In the following we see (top to bottom images) the Hue, Saturation, and Value ch
 ![alt text][image4]
 ![alt text][image5]
 
+Each image is cropped by removing the top 50 and bottom 20 pixels and resized to 64x128.  This removes the sky and the hood of the car and should help the network learn important features.
 
+I incorporated the left and right side camera images along with a tuned correction factor for the
+steering angle.
 
-
-
-To augment the data sat, I also flipped images and took the negative steering angle in order to increase diversity as the test track is left turn biased. 
+Finally to augment the data sat, I also flipped images and took the negative steering angle in order to increase diversity as the test track is left turn biased.
 
 For example, here is a normal image that has then been flipped:
 
 ![alt text][image8]
 ![alt text][image9]
 
-Finally, I incorporated the left and right side camera images along with a tuned correction factor for the
-steering angle.
 
-After the collection process, I had X number of data points. I then preprocessed this data by ...
+After the collection process, I had ~8000 data points. After preprocessing and augmentation I had roughly 48000 images steering data pairs.  Allowing for 20% of the data in the validation set still gives me roughly 38,000 training data points.  This appears to me to be a decently large dataset.  In the future, I will add a small
+amount of noise to the steering correction factor to see if it helps smooth (regularize) the steering controls.
 
+The data was then shuffled and split into train and validation datasets.
 
-I finally randomly shuffled the data set and put Y% of the data into a validation set. 
+I used this training data for training the model and employed early-stopping on the validation set using a model checkpointer feature of Keras.  This made training easier as I could just set training for 10 epochs and the best model in validation loss would be automatically saved.  I used a batch size of 128 as that has worked well for me in the past.  I used the adam optimizer so that manually tuning the learning rate wasn't necessary.
 
-I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was Z as evidenced by ... I used an adam optimizer so that manually training the learning rate wasn't necessary.
+#### Attempts to reduce overfitting in the model ####
+
+Batch Normalization layers are used after each layer of the CNN.  Batch normalization has been found to improve the stability and speed of training by normalizing based on the batch statistics of the output of the layer above. The model also contains a dropout layer (0.1 probability) in order to reduce overfit.
+
+A separate validation dataset is used to prevent overfit.  There is no separate test dataset since the model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
 
 #### Model Architecture ####
 
+The data is normalized using a Keras lambda layer.  In order for the network to find the best color space representation of the input image, I use a single 1x1 convolution filter to compress the HSV input image to a single feature map layer.  This is followed by 6 3x3 2D convolution filters and finally a single 1x1 convolution layer to compress the 6 layers into a single layer.  The network then flattens the feature map and is fed to a dense layer with a single identity neuron as final output.  All convolution layers use relu activation functions.
 
-My model consists of a convolution neural network with 3x3 filter sizes and depths between 32 and 128 (model.py lines 18-24).
+I believe that using an initial 1x1 convolution layer is better than excluding certain input channels.  The network can learn to create an adaptive color representation for the input images.
 
-The model includes RELU layers to introduce nonlinearity (code line 20), and the data is normalized in the model using a Keras lambda layer (code line 18). 
 
 ####  Final Model Summary ####
 
-Here is the output of Keras's model.summary() as a structured architecture summary. 
+Here is the output of Keras's model.summary() as a structured architecture summary. You can see that most parameters are in the final output layer.  By shrinking the dataset images further, I believe I can reduce the number of parameters dramatically. 
 
 ![alt text][image1]
 
-####2. Attempts to reduce overfitting in the model
 
-The model contains dropout layers in order to reduce overfitting (model.py lines 21). 
-
-The model was trained and validated on different data sets to ensure that the model was not overfitting (code line 10-16). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
-
-####3. Model parameter tuning
-
-The model used an adam optimizer, so the learning rate was not tuned manually.
 

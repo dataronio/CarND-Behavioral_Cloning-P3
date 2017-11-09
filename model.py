@@ -7,13 +7,15 @@ from keras.regularizers import l2, activity_l2
 from keras.layers import Lambda, Convolution2D, BatchNormalization
 from keras.callbacks import ModelCheckpoint
 
+# Program Constants
+# size of resized images, left, right steering correction and training batch size
 ROWS = 64
 COLS = 128
 CORRECTION = 0.35
 batch_size = 128
 
 def preprocess(img):
-    # crop image inside
+    # crop image inside take 50 from top and 20 from bottom
     # go to HSV colorspace
     # print(img.shape)
     hsvimg = cv2.cvtColor(img[50:140, 0: 320], cv2.COLOR_RGB2HSV)
@@ -21,7 +23,7 @@ def preprocess(img):
     # print(newimg.shape)
     return newimg
 
-
+# load log for image filenames and variables
 lines = []
 with open('../data/driving_log.csv') as csvfile:
     reader = csv.reader(csvfile)
@@ -33,6 +35,7 @@ images = []
 measurements = []
 augmented_images, augmented_measurements = [] ,[]
 
+# start augmenting left-right images
 for line in lines:
     source_path = line[0]
     filename = source_path.split('/')[-1]
@@ -42,13 +45,14 @@ for line in lines:
     images.append(img)
     measurement = float(line[3])
     measurements.append(measurement)
-
+    
     source_path = line[1]
     filename = source_path.split('/')[-1]
     current_path = '../data/IMG/' + filename
     image = cv2.imread(current_path)
     img = preprocess(image)
     images.append(img)
+    # add correction to steering for left camera
     measurement = float(line[3])  + CORRECTION
     measurements.append(measurement)
 
@@ -58,6 +62,7 @@ for line in lines:
     image = cv2.imread(current_path)
     img = preprocess(image)
     images.append(img)
+    # subtract correction to steering for right camera
     measurement = float(line[3]) - CORRECTION
     measurements.append(measurement ) 
 
@@ -67,13 +72,12 @@ for image, measurement in zip(images, measurements):
     augmented_images.append(cv2.flip(image, 1))
     augmented_measurements.append(-1.0*measurement)
 
-
+# make into numpy arrays
 X_train = np.array(augmented_images)
 y_train = np.array(augmented_measurements)
 
 #print(X_train.shape)
 
-#X_train = X_train.reshape(X_train.shape[0], ROWS, COLS, 3)
 
 model = Sequential()
 model.add(Lambda(lambda x: (x / 255.0) - 0.5, input_shape=(ROWS, COLS, 3)))
@@ -90,6 +94,7 @@ model.add(Dense(1, init='uniform'))
 
 print(model.summary())
 
+# use model checkpointer to save best validation loss
 model.compile(loss='mse', optimizer='adam')
 checkpointer = ModelCheckpoint(filepath="model.h5", verbose=1, save_best_only=True)
 model.fit(X_train, y_train, batch_size=batch_size, validation_split=0.2,  shuffle=True, nb_epoch=10, callbacks=[checkpointer])
@@ -98,4 +103,3 @@ model_json = model.to_json()
 with open("model.json", "w") as json_file:
     json_file.write(model_json)
 
-# model.save('model.h5')
