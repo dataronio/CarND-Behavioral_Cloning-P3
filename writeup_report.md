@@ -17,7 +17,7 @@ The goals / steps of this project that I followed are the following:
 
 [//]: # (Image References)
 
-[image1]: ./examples/summary.png "Model Summary"
+[image1]: ./examples/structure.png "Model Summary"
 [image2]: ./examples/rgb.jpg "RGB Image"
 [image3]: ./examples/hue.png "Hue Image"
 [image4]: ./examples/saturation.png "Saturation Image"
@@ -33,6 +33,7 @@ The goals / steps of this project that I followed are the following:
 ### Files Submitted ###
 
 My project includes the following files:
+
 * model.py containing the script to create and train the model
 * drive.py for driving the car in autonomous mode suitably modified for image preprocessing
 * model.h5 containing a trained convolution neural network
@@ -100,6 +101,7 @@ Here we see the standard RGB cube representation.
 
 Above is the HSV cylinder color space.
 
+---
 
 Examples are given below for a standard RGB image:
 
